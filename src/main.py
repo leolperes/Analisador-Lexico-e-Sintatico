@@ -1,16 +1,28 @@
-from lexer.lexer import Lexer
+from analisadorLexico import Lexer
+from analisadorLexico import LexicalError
 
 def main():
-    # Apenas um código qualquer para inicializar o lexer
-    sample_code = "int x = 10;"
 
-    # Instancia o lexer
-    lexer = Lexer(sample_code, token_file="tokens.json")
+    code = """int x = 10;
+    if (x > 5) return x;
+    """
 
-    # AQUI testamos a função compile_regex
-    print("\n--- Testando compile_regex ---")
-    for token_type, regex in lexer.token_regex:
-        print(f"{token_type} -> {regex.pattern}")
+    lexer = Lexer(code)
+    tokens = lexer.tokenize()
+
+
+    print("===========================")
+    print("----------Tokens:----------")
+    print("===========================")
+
+    for t in tokens:
+        print(t)
+
+    
+
+    print(lexer.symbols.__str__())
+
+
 
 if __name__ == "__main__":
     main()

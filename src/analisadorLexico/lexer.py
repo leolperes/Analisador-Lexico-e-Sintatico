@@ -1,86 +1,187 @@
 from __future__ import annotations
-import json
-import re
-from pathlib import Path
-from typing import List, Optional, Tuple
-
-
-from .token import Token
+from typing import List, Optional
 from .errors import LexicalError
+from .symbol_table import SymbolTable
+from .token import Token
+
 
 
 class Lexer:
-    def __init__(self, code: str, token_file: str = "tokens.json"):
+    KEYWORDS = ["int", "if", "else", "def", "print", "return"]
+
+    def __init__(self, code: str):
         self.code = code
-        self.position = 0
+        self.pos = 0
         self.line = 1
-        self.column = 1
+        self.col = 1
+
+        self.symbols = SymbolTable()
+        for kw in self.KEYWORDS:
+            self.symbols.insert(kw)
+
         self.tokens: List[Token] = []
 
+    # -----------------------------
+    #     UTILIDADES BÁSICAS
+    # -----------------------------
+    def peek(self) -> str:
+        if self.pos >= len(self.code):
+            return "\0"
+        return self.code[self.pos]
 
-        self.token_file = token_file
-        self.token_defs = self.load_tokens(token_file)
-        self.token_regex = self.compile_regex(self.token_defs)
+    def advance(self):
+        if self.pos < len(self.code):
+            if self.code[self.pos] == '\n':
+                self.line += 1
+                self.col = 1
+            else:
+                self.col += 1
+        self.pos += 1
 
+    def match(self, expected: str) -> bool:
+        if self.code[self.pos:self.pos+len(expected)] == expected:
+            return True
+        return False
 
-    def load_tokens(self, filepath: str) -> List[dict]:
-        path = Path(filepath)
-        if not path.exists():
-            raise FileNotFoundError(f"Token definition file not found: {filepath}")
-        with open(filepath, "r", encoding="utf-8") as f:
-            return json.load(f)
+    # ==================================================
+    #               DFA: IDENTIFICADOR
+    # ==================================================
+    def read_identifier(self) -> Optional[str]:
+        if not self.peek().isalpha():
+            return None
 
+        start = self.pos
+        lexeme = ""
 
-    def compile_regex(self, token_defs: List[dict]) -> List[Tuple[str, re.Pattern]]:
-        regex_list = []
-        for t in token_defs:
-            try:
-                pattern = re.compile(t["regex"])
-            except re.error as e:
-                raise LexicalError(f"Invalid regex for token {t['type']}: {e}")
-            regex_list.append((t["type"], pattern))
-        return regex_list
+        while self.peek().isalnum() or self.peek() == "_":
+            lexeme += self.peek()
+            self.advance()
 
+        return lexeme
 
-    def peek(self, length: int = 1) -> str:
-        return self.code[self.position:self.position + length]
+    # ==================================================
+    #               DFA: NÚMEROS (num)
+    # ==================================================
+    def read_number(self) -> Optional[str]:
+        if not self.peek().isdigit():
+            return None
 
+        lexeme = ""
+        while self.peek().isdigit():
+            lexeme += self.peek()
+            self.advance()
 
-    def advance(self, length: int = 1):
-        for _ in range(length):
-            if self.position < len(self.code):
-                if self.code[self.position] == '\n':
-                    self.line += 1
-                    self.column = 1
-                else:
-                    self.column += 1
-                self.position += 1
+        return lexeme
 
+    # ==================================================
+    #               OPERADORES / SÍMBOLOS
+    # ==================================================
+    def read_operator(self) -> Optional[Token]:
+        c = self.peek()
 
+        if c == "\0":
+            return None
+
+        start_line = self.line
+        start_col = self.col
+
+        # Operadores duplos
+        if self.match("<="):
+            self.advance(); self.advance()
+            return Token("LE", "<=", start_line, start_col)
+        if self.match(">="):
+            self.advance(); self.advance()
+            return Token("GE", ">=", start_line, start_col)
+        if self.match("=="):
+            self.advance(); self.advance()
+            return Token("EQ", "==", start_line, start_col)
+        if self.match("!="):
+            self.advance(); self.advance()
+            return Token("NE", "!=", start_line, start_col)
+
+        # Operadores simples
+        single = {
+            '+': "PLUS",
+            '-': "MINUS",
+            '*': "MULT",
+            '/': "DIV",
+            '<': "LT",
+            '>': "GT",
+            '=': "ASSIGN",
+            '(': "LPAREN",
+            ')': "RPAREN",
+            '{': "LBRACE",
+            '}': "RBRACE",
+            ',': "COMMA",
+            ';': "SEMICOLON",
+        }
+
+        if c in single:
+            token_type = single[c]
+            self.advance()
+            return Token(token_type, c, start_line, start_col)
+
+        return None
+
+    # ==================================================
+    #                  TOKENIZAÇÃO
+    # ==================================================
     def tokenize(self) -> List[Token]:
-        while self.position < len(self.code):
-            match_found = False
+        while self.pos < len(self.code):
 
+            c = self.peek()
 
-            for token_type, pattern in self.token_regex:
-                match = pattern.match(self.code, self.position)
-                if match:
-                    value = match.group(0)
+            # Ignorar espaços e quebras de linha
+            if c.isspace():
+                self.advance()
+                continue
 
+            # Identificadores / palavras-chave
+            ident = self.read_identifier()
+            if ident:
+                start_line = self.line
+                start_col = self.col - len(ident)
 
-                    if token_type != "WHITESPACE":
-                        self.tokens.append(Token(token_type, value, self.line, self.column))
+                # Se é keyword → token é o nome da keyword em MAIÚSCULO
+                if ident in self.KEYWORDS:
+                    self.tokens.append(Token(ident.upper(), ident, start_line, start_col))
+                else:
+                    # Identificadores SEMPRE viram "ID"
+                    if not self.symbols.exists(ident):
+                        self.symbols.insert(ident)
 
+                    self.tokens.append(Token("ID", ident, start_line, start_col))
+                continue
 
-                    self.advance(len(value))
-                    match_found = True
-                    break
+            # Números
+            num = self.read_number()
+            if num:
+                start_line = self.line
+                start_col = self.col - len(num)
+                self.tokens.append(Token("NUM", num, start_line, start_col))
+                continue
 
+            # Operadores e símbolos
+            op = self.read_operator()
+            if op:
+                self.tokens.append(op)
+                continue
 
-            if not match_found:
-                char = self.peek()
-                raise LexicalError(f"Unexpected character '{char}' at line {self.line}, column {self.column}")
+            # Se nada reconheceu, erro
+            raise LexicalError(
+                f"Caractere inesperado '{c}' na linha {self.line}, coluna {self.col}"
+            )
 
-
-        self.tokens.append(Token("EOF", None, self.line, self.column))
+        self.tokens.append(Token("EOF", "", self.line, self.col))
         return self.tokens
+
+    # ==================================================
+    #                  TOKENIZAÇÃO
+    # ==================================================
+    def __str__(self) -> str:
+        output = "===========================\n"
+        output += "----------Tokens:----------\n"
+        output += "===========================\n"
+        for t in self.tokens:
+            output += f"{t}\n"
+        return output
