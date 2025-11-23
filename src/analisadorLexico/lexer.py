@@ -1,18 +1,27 @@
+# Grupo composto por:
+# Leonardo Lemr Peres - Matriícula 23200521
+#
+# Arquivo do analisador léxico (lexer)
+
+
 from __future__ import annotations
 from typing import List, Optional
-from .errors import LexicalError
 from .symbol_table import SymbolTable
 from .token import Token
 
 
 class Lexer:
+    #-------------------------------PALAVRAS-CHAVE--------------------------------
     KEYWORDS = ["int", "if", "else", "def", "print", "return"]
 
+    # Construtor
     def __init__(self, code: str):
         self.code = code
         self.pos = 0
         self.line = 1
         self.col = 1
+
+        self.show_symbols = True
 
         # ----------- Tabela de símbolos ------------
         self.symbols = SymbolTable()
@@ -26,11 +35,14 @@ class Lexer:
     # ------------------------------------------------
     #                  UTILIDADES
     # ------------------------------------------------
+
+    # Retorna o caractere atual sem avançar
     def peek(self) -> str:
         if self.pos >= len(self.code):
             return "\0"
         return self.code[self.pos]
-
+    
+    # Avança para o próximo caractere
     def advance(self):
         if self.pos < len(self.code):
             if self.code[self.pos] == '\n':
@@ -40,14 +52,19 @@ class Lexer:
                 self.col += 1
         self.pos += 1
 
+    # Verifica se o próximo trecho do código corresponde ao esperado
     def match(self, expected: str) -> bool:
         if self.code[self.pos:self.pos+len(expected)] == expected:
             return True
         return False
 
+
     # ------------------------------------------------
-    #                DFA: IDENTIFICADOR
+    #                AFD: IDENTIFICADOR
     # ------------------------------------------------
+
+    # Lê um identificador ou palavra-chave
+    # Retorna o lexema ou None se não for um identificador
     def read_identifier(self) -> Optional[str]:
         if not self.peek().isalpha():
             return None
@@ -60,8 +77,11 @@ class Lexer:
         return lexeme
 
     # ------------------------------------------------
-    #                   DFA: NÚMEROS
+    #                   AFD: NÚMEROS
     # ------------------------------------------------
+
+    # Lê um número
+    # Retorna o lexema ou None se não for um número
     def read_number(self) -> Optional[str]:
         if not self.peek().isdigit():
             return None
@@ -76,6 +96,9 @@ class Lexer:
     # ------------------------------------------------
     #             OPERADORES E SÍMBOLOS
     # ------------------------------------------------
+
+    # Lê um operador ou símbolo
+    # Retorna o token ou None se não for um operador/símbolo
     def read_operator(self) -> Optional[Token]:
         c = self.peek()
 
@@ -126,9 +149,11 @@ class Lexer:
     # ------------------------------------------------
     #                   TOKENIZAÇÃO
     # ------------------------------------------------
+
+    # Realiza a tokenização do código fonte
+    # retorna uma lista de tokens
     def tokenize(self) -> List[Token]:
         while self.pos < len(self.code):
-
             c = self.peek()
 
             # Espaços e quebras de linha
@@ -141,28 +166,22 @@ class Lexer:
             if ident:
                 start_line = self.line
                 start_col = self.col - len(ident)
-
-                # Agora usamos a tabela de símbolos
                 if self.symbols.exists(ident):
-
-                    # Se está entre as palavras-chave → KEYWORD
-                    if ident in self.KEYWORDS:
-                        self.tokens.append(Token(ident.upper(), ident, start_line, start_col))
-
-                    else:
-                        # Identificador já existente
-                        self.tokens.append(Token("ID", ident, start_line, start_col))
-
+                    token_type = ident.upper() if ident in self.KEYWORDS else "ID"
                 else:
-                    # Identificador novo → inserir na tabela
                     self.symbols.insert(ident)
-                    self.tokens.append(Token("ID", ident, start_line, start_col))
-
+                    token_type = "ID"
+                self.tokens.append(Token(token_type, ident, start_line, start_col))
                 continue
 
             # Números
             num = self.read_number()
             if num:
+                if self.peek().isalpha() or self.peek() == "_":
+                    print(f"Erro léxico: Identificador inválido começando com número '{num + self.peek()}' "
+                          f"na linha {self.line}, coluna {self.col}")
+                    self.show_symbols = False
+                    break
                 start_line = self.line
                 start_col = self.col - len(num)
                 self.tokens.append(Token("NUM", num, start_line, start_col))
@@ -175,20 +194,22 @@ class Lexer:
                 continue
 
             # Se nada reconheceu → erro léxico
-            raise LexicalError(
-                f"Caractere inesperado '{c}' na linha {self.line}, coluna {self.col}"
-            )
+            print(f"Erro léxico: Caractere inesperado '{c}' na linha {self.line}, coluna {self.col}")
+            self.show_symbols = False
+            break
 
+        # Adicionar EOF no final
         self.tokens.append(Token("EOF", "", self.line, self.col))
-        return self.tokens
+
+
 
     # ------------------------------------------------
     #                   STRING
     # ------------------------------------------------
+
+    # Representação em string dos tokens gerados
     def __str__(self) -> str:
-        output = "===========================\n"
-        output += "----------Tokens:----------\n"
-        output += "===========================\n"
+        output = ""
         for t in self.tokens:
             output += f"{t}\n"
         return output

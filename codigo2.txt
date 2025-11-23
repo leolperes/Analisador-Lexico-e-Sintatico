@@ -1,0 +1,20 @@
+int x = 1.0;
+int y = 20;
+
+if (1x > y) {
+    print(x);
+} else {
+    print(y);
+}
+
+# este comentario causa erro
+def func1(int a) {
+    int b = a + 1;
+    return b;
+}
+
+int z = x @ y;
+
+print("texto não permitido");
+
+return 0;

@@ -1,0 +1,18 @@
+# Grupo composto por:
+# Leonardo Lemr Peres - Matriícula 23200521
+# Instruções para rodar o programa
+
+Para rodar o programa:
+
+    1. Utilizar maquina linux ou WSL no windows
+    2. Ter o python 3.12 instalado na maquina
+    3. entrar na pasta raiz do projeto via terminal
+    4. rodar o comando "python3 src/main.py"
+
+Ao rodar será executada a analise lexica de um arquivo com o codigo.
+Há dois arquivos de exemplo na pasta raiz: codigo1.txt e codigo2.txt
+O primeiro não possui nenhum erro lexico e irá retornar a lista de tokens em ordem de aparição e a tabela de simbolos.
+O segundo contem diversos erros lexicos, e irá retornar a exeção enccontrada seguida do erro na linha e coluna correspondente.
+
+Outros arquivos de teste podem ser criados na raiz do projeto.
+
