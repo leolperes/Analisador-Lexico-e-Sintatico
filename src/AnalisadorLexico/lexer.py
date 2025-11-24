@@ -167,10 +167,10 @@ class Lexer:
                 start_line = self.line
                 start_col = self.col - len(ident)
                 if self.symbols.exists(ident):
-                    token_type = ident.upper() if ident in self.KEYWORDS else "ID"
+                    token_type = ident.upper() if ident in self.KEYWORDS else "id"
                 else:
                     self.symbols.insert(ident)
-                    token_type = "ID"
+                    token_type = "id"
                 self.tokens.append(Token(token_type, ident, start_line, start_col))
                 continue
 
@@ -184,7 +184,7 @@ class Lexer:
                     break
                 start_line = self.line
                 start_col = self.col - len(num)
-                self.tokens.append(Token("NUM", num, start_line, start_col))
+                self.tokens.append(Token("num", num, start_line, start_col))
                 continue
 
             # Operadores e símbolos
@@ -199,7 +199,7 @@ class Lexer:
             break
 
         # Adicionar EOF no final
-        self.tokens.append(Token("EOF", "", self.line, self.col))
+        self.tokens.append(Token("EOF", "$", self.line, self.col))
 
 
 
@@ -213,3 +213,11 @@ class Lexer:
         for t in self.tokens:
             output += f"{t}\n"
         return output
+
+
+    #=------------------------------------------------
+    #               GETTERS
+    # ------------------------------------------------
+
+    def get_tokens(self) -> List[Token]:
+        return self.tokens

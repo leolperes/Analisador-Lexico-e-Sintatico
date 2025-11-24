@@ -1,0 +1,22 @@
+def calcula (int x, int y) {
+    int s;
+    s = x+y;
+    return s;
+}
+
+def main () {
+    int k;
+    int m;
+    k = 10;
+    m = 5;
+
+    if (k > m) {
+        m = k - m;
+        print(m);
+    }
+
+    print(k);
+
+    return k;
+
+}

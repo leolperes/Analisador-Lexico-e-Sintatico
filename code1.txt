@@ -1,0 +1,70 @@
+def sum(int a, int b) {
+    int result; 
+    result = a + b;
+    return result;
+}
+
+def maxFunc(int x, int y) {
+    if (x > y) {
+        return x;
+    } else {
+        return y;
+    }
+}
+
+def swap(int a, int b) {
+    int temp;
+    temp = a;
+    a = b;
+    b = temp;
+    return;
+}
+
+def multiply(int x, int y) {
+    int product;
+    product = x * y;
+    return product;
+}
+
+
+def factorial(int n) {
+    int result, i, m, factM;
+    result = 1;
+    i = 1;
+    m = n-1;
+    factM = factorial(m);
+    result = result + factM;
+    return result;
+}
+
+def main() {
+    int r, s, t;
+    r = 10;
+    s = 20;
+    t = sum(r, s);
+    print(t);
+    int m;
+    m = maxFunc(r, s);
+    print(m);
+    
+    int product;
+    product = multiply(r, s);
+    print(product);
+    
+    int fact;
+    fact = 5;
+    fact = factorial(fact);
+    print(fact);
+    
+    print(f);
+    swap(r, s);
+    if (r != s) {
+        print(1);
+    } else {
+        print(0);
+    }
+    if (t >= 30) {
+        print(100);
+    }
+    return;
+}

@@ -8,11 +8,18 @@ Para rodar o programa:
     2. Ter o python 3.12 instalado na maquina
     3. entrar na pasta raiz do projeto via terminal
     4. rodar o comando "python3 src/main.py"
+    5. Escrever o nome do arquivo de codigo a ser analisado (ex: code1.txt)
+        I. O arquivo deve estar na pasta raiz do projeto
 
 Ao rodar será executada a analise lexica de um arquivo com o codigo.
-Há dois arquivos de exemplo na pasta raiz: codigo1.txt e codigo2.txt
-O primeiro não possui nenhum erro lexico e irá retornar a lista de tokens em ordem de aparição e a tabela de simbolos.
+Há 6 arquivos de exemplo na pasta raiz: code1.txt, code2.txt, code3.txt, code4.txt, code5.txt e code6.txt
+O primeiro não possui nenhum erro lexico e irá retornar a lista de tokens em ordem de aparição, a tabela de simbolos e ok para analise sintatica.
 O segundo contem diversos erros lexicos, e irá retornar a exeção enccontrada seguida do erro na linha e coluna correspondente.
+O terceiro contem a falta de pareteses na declaração de uma função, e irá retornar o erro sintatico correspondente.
+O quarto contem o retorno de uma função com uma expressão de soma, e irá retornar o erro sintatico correspondente.
+O quinto contem duas instruções dentro de um bloco if, e irá retornar o erro sintatico correspondente.
+O sexto contem uma linha sem o ponto e virgula no final, e irá retornar o erro sintatico correspondente.
+
 
 Outros arquivos de teste podem ser criados na raiz do projeto.
 

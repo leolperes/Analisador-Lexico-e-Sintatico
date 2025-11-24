@@ -4,7 +4,8 @@
 # Arquivo principal do programa
 
 
-from analisadorLexico import Lexer
+from AnalisadorLexico import Lexer
+from AnalisadorSintatico import ParserPreditivo, ParseTable
 from pathlib import Path
 
 def main():
@@ -19,10 +20,12 @@ def main():
         with open(file_path, "r", encoding="utf-8") as f:
             code = f.read()
 
+
+
         # Cria o analisador léxico
         lexer = Lexer(code)
         lexer.tokenize()
-
+        tokens = lexer.get_tokens()
 
         # verifica se deve exibir a tabela de símbolos e tokens
         if lexer.show_symbols:
@@ -37,6 +40,17 @@ def main():
             print("----Tabela de Símbolos:----")
             print("===========================")
             print(lexer.symbols)
+
+        
+
+            # Cria o analisador sintático preditivo
+            print("\n=============================")
+            print("----Analisador Sintatico:----")
+            print("=============================")
+            parser = ParserPreditivo(tokens, ParseTable)
+            parser.parse()
+
+
 
     # Trata erros de arquivo não encontrado
     except FileNotFoundError:

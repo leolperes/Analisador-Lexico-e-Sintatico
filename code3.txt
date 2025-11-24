@@ -1,0 +1,18 @@
+def calcula int x, int y {
+    return x + y;
+}
+
+int k;
+int m;
+k = 10;
+m = 5;
+
+if (k > m) {
+    m = k - m;
+    print(m);
+}
+
+print(k);
+print(m);
+
+return k;
